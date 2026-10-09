@@ -21,7 +21,7 @@ type documentResponse struct {
 func TestCreateAndGetDocument(t *testing.T) {
 	router := httpapi.NewRouter()
 	created := httptest.NewRecorder()
-	router.ServeHTTP(created, httptest.NewRequest(http.MethodPost, "/documents", strings.NewReader(`{"title":"  main.go  ","content":"package main\n"}`)))
+	router.ServeHTTP(created, httptest.NewRequest(http.MethodPost, "/documents", strings.NewReader(`{"title":"  main.go  ","content":"package main\n"`)))
 	if created.Code != http.StatusCreated {
 		t.Fatalf("create status = %d, want %d; body = %s", created.Code, http.StatusCreated, created.Body.String())
 	}
