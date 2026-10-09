@@ -1,39 +1,26 @@
-# 实时代码协作编辑后端 Demo
+# 实时代码协作编辑系统
 
-当前是第 1 步骨架：HTTP 健康检查和独立的 WebSocket echo。文件 Room、认证、编辑和权限协议尚未接入。
+项目架构与 MVP 范围见 [docs/proposal.md](docs/proposal.md)。当前仅完成 Go Gin 服务骨架与健康检查；协同编辑、权限和持久化尚未实现。
 
-## 运行
+## 目录职责
 
-需要 Go 1.26 或更新版本。在项目根目录执行：
+- `cmd/api/`、`internal/httpapi/`：Go 业务服务入口及 HTTP API；后续负责身份、文档、成员和权限，不维护权威 Y.Doc。
+- `frontend/`：后续放置 React、CodeMirror 6 与 Yjs 客户端。
+- `collaboration/`：后续放置 Node.js Yjs 协同服务；它负责权威 Y.Doc、同步、逐次写入授权与持久化确认。
 
-```powershell
-go run .
-```
+## 运行与验证
 
-服务默认监听 `127.0.0.1:8080`。可用 `ADDR` 环境变量更改地址。另开终端检查：
-
-```powershell
-curl.exe http://127.0.0.1:8080/healthz
-```
-
-预期返回 `{"status":"ok"}`。按 Ctrl+C 停止服务。
-
-## WebSocket echo
-
-连接 `ws://127.0.0.1:8080/ws/echo`，发送文本帧（例如 `{"type":"ping","text":"hello"}`），服务端会原样回送消息类型和内容；二进制帧也会原样回送。它只用于验证 WebSocket 连接和收发，不是协作编辑协议。
-
-可以先在浏览器打开 `http://127.0.0.1:8080/healthz`，再在该页面的开发者工具控制台运行：
-
-```javascript
-const ws = new WebSocket("ws://127.0.0.1:8080/ws/echo");
-ws.onmessage = event => console.log(event.data);
-ws.onopen = () => ws.send(JSON.stringify({ type: "ping", text: "hello" }));
-```
-
-Echo 保留 WebSocket 库默认的同源检查。设计文档中的 `/ws/files/{fileId}` 将用于后续的首帧认证和文件订阅，不与 echo 共用协议。
-
-## 测试
+在仓库根目录运行：
 
 ```powershell
+go run ./cmd/api
+```
+
+默认监听 `127.0.0.1:8080`；可用 `ADDR` 环境变量修改地址。另开终端执行：
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8080/health
 go test ./...
 ```
+
+`GET /health` 返回 `{"status":"ok"}`，仅表示 Go HTTP 服务正在运行，不代表数据库或协同服务就绪。

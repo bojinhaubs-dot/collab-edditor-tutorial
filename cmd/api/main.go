@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"codex-hubcoding-test/internal/httpapi"
 )
 
 func main() {
@@ -15,9 +17,9 @@ func main() {
 
 	server := &http.Server{
 		Addr:              addr,
-		Handler:           newHandler(),
+		Handler:           httpapi.NewRouter(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-	log.Printf("listening on http://%s", addr)
+	log.Printf("Go API listening on http://%s", addr)
 	log.Fatal(server.ListenAndServe())
 }
