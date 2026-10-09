@@ -1,16 +1,18 @@
-package httpapi
+package tests
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"codex-hubcoding-test/internal/httpapi"
 )
 
 func TestHealth(t *testing.T) {
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
 
-	NewRouter().ServeHTTP(response, request)
+	httpapi.NewRouter().ServeHTTP(response, request)
 
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusOK)
