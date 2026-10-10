@@ -1,12 +1,15 @@
 package httpapi
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 
+	"codex-hubcoding-test/internal/model"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type document struct {
@@ -20,17 +23,16 @@ type createDocumentRequest struct {
 	Content *string `json:"content" binding:"required"`
 }
 
-type documentStore struct {
-	mu      sync.Mutex
-	nextID  uint64
-	entries map[string]document
+type documentRepository interface {
+	Create(context.Context, *model.Document) error
+	GetByID(context.Context, uint64) (model.Document, error)
 }
 
-func newDocumentStore() *documentStore {
-	return &documentStore{entries: make(map[string]document)}
+type documentHandler struct {
+	repository documentRepository
 }
 
-func (store *documentStore) create(c *gin.Context) {
+func (handler *documentHandler) create(c *gin.Context) {
 	var request createDocumentRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
@@ -43,27 +45,40 @@ func (store *documentStore) create(c *gin.Context) {
 		return
 	}
 
-	// The ID and map entry change together so concurrent requests cannot reuse an ID.
-	store.mu.Lock()
-	store.nextID++
-	result := document{
-		ID:      strconv.FormatUint(store.nextID, 10),
+	stored := model.Document{
 		Title:   title,
 		Content: *request.Content,
 	}
-	store.entries[result.ID] = result
-	store.mu.Unlock()
+	if err := handler.repository.Create(c.Request.Context(), &stored); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not save document"})
+		return
+	}
 
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusCreated, toDocumentResponse(stored))
 }
 
-func (store *documentStore) get(c *gin.Context) {
-	store.mu.Lock()
-	result, ok := store.entries[c.Param("id")]
-	store.mu.Unlock()
-	if !ok {
+func (handler *documentHandler) get(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid document id"})
+		return
+	}
+	stored, err := handler.repository.GetByID(c.Request.Context(), id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
 		return
 	}
-	c.JSON(http.StatusOK, result)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not load document"})
+		return
+	}
+	c.JSON(http.StatusOK, toDocumentResponse(stored))
+}
+
+func toDocumentResponse(stored model.Document) document {
+	return document{
+		ID:      strconv.FormatUint(stored.ID, 10),
+		Title:   stored.Title,
+		Content: stored.Content,
+	}
 }

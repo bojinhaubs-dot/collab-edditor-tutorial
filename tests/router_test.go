@@ -12,7 +12,7 @@ func TestHealth(t *testing.T) {
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
 
-	httpapi.NewRouter().ServeHTTP(response, request)
+	httpapi.NewRouter(newTestRepository()).ServeHTTP(response, request)
 
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusOK)

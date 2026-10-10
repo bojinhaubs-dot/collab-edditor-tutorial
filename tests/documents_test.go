@@ -19,9 +19,9 @@ type documentResponse struct {
 }
 
 func TestCreateAndGetDocument(t *testing.T) {
-	router := httpapi.NewRouter()
+	router := httpapi.NewRouter(newTestRepository())
 	created := httptest.NewRecorder()
-	router.ServeHTTP(created, httptest.NewRequest(http.MethodPost, "/documents", strings.NewReader(`{"title":"  main.go  ","content":"package main\n"`)))
+	router.ServeHTTP(created, httptest.NewRequest(http.MethodPost, "/documents", strings.NewReader(`{"title":"  main.go  ","content":"package main\n"}`)))
 	if created.Code != http.StatusCreated {
 		t.Fatalf("create status = %d, want %d; body = %s", created.Code, http.StatusCreated, created.Body.String())
 	}
@@ -50,9 +50,17 @@ func TestCreateAndGetDocument(t *testing.T) {
 
 func TestGetMissingDocument(t *testing.T) {
 	response := httptest.NewRecorder()
-	httpapi.NewRouter().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/documents/999", nil))
+	httpapi.NewRouter(newTestRepository()).ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/documents/999", nil))
 	if response.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusNotFound)
+	}
+}
+
+func TestGetInvalidDocumentID(t *testing.T) {
+	response := httptest.NewRecorder()
+	httpapi.NewRouter(newTestRepository()).ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/documents/not-a-number", nil))
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusBadRequest)
 	}
 }
 
@@ -68,7 +76,7 @@ func TestCreateDocumentBadRequest(t *testing.T) {
 		{"wrong content type", `{"title":"main.go","content":123}`},
 	}
 
-	router := httpapi.NewRouter()
+	router := httpapi.NewRouter(newTestRepository())
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			response := httptest.NewRecorder()
@@ -88,7 +96,7 @@ func TestCreateDocumentBadRequest(t *testing.T) {
 
 func TestConcurrentDocumentRequests(t *testing.T) {
 	const count = 64
-	router := httpapi.NewRouter()
+	router := httpapi.NewRouter(newTestRepository())
 	ids := make(chan string, count)
 	errors := make(chan error, count)
 	var workers sync.WaitGroup
