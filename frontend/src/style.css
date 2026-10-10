@@ -20,7 +20,10 @@ h1 { margin: 0 0 8px; font-size: clamp(26px, 4vw, 38px); }
 .document-bar { border-bottom: 1px solid #e3e8ed; }
 h2 { margin: 0 0 4px; font-size: 20px; overflow-wrap: anywhere; }
 .document-id, .mode, .document-footer { color: #61717f; font-size: 13px; }
+.document-meta { display: flex; align-items: flex-end; flex-direction: column; gap: 6px; }
 .mode { white-space: nowrap; }
+.connection-status { font-size: 13px; color: #946200; }
+.connection-status.connected { color: #14743f; }
 .editor .cm-editor { min-height: 340px; font-size: 14px; }
 .editor .cm-scroller { font-family: "Cascadia Code", "Consolas", monospace; }
 .document-footer { border-top: 1px solid #e3e8ed; }
@@ -29,4 +32,5 @@ h2 { margin: 0 0 4px; font-size: 20px; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
   .page { padding: 28px 12px; }
   .document-bar, .document-footer { padding: 14px; }
+  .document-meta { align-items: flex-end; text-align: right; }
 }

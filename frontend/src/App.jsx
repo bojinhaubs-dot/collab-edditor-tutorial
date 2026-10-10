@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import CodeEditor from './CodeEditor.jsx'
+import CollaborationStatus from './CollaborationStatus.jsx'
 
 const documentID = new URLSearchParams(window.location.search).get('id')
 
@@ -49,7 +50,7 @@ export default function App() {
   return (
     <main className="page">
       <header className="page-header">
-        <p className="eyebrow">B1 · 单用户编辑</p>
+        <p className="eyebrow">B2 · WebSocket 连接</p>
         <h1>代码文档编辑器</h1>
         <p className="description">从 Go API 加载文档，在当前页面中编辑代码。</p>
       </header>
@@ -64,14 +65,17 @@ export default function App() {
               <h2>{document.title}</h2>
               <span className="document-id">文档 ID：{document.id}</span>
             </div>
-            <span className="mode">Go 语法高亮</span>
+            <div className="document-meta">
+              <span className="mode">Go 语法高亮</span>
+              <CollaborationStatus documentID={document.id} />
+            </div>
           </div>
           <CodeEditor initialContent={document.content} onChange={handleChange} />
           <div className="document-footer" aria-live="polite">
             <span>{content.length} 个字符</span>
             <span>{content === document.content ? '尚无本地修改' : '本地修改未保存'}</span>
           </div>
-          <p className="note">当前阶段只支持本地编辑；刷新页面会重新加载 API 中的初始内容。</p>
+          <p className="note">当前阶段只建立 Yjs 连接；编辑仍只在本页面生效，刷新后恢复 API 中的初始内容。</p>
         </section>
       )}
     </main>
