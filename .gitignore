@@ -3,3 +3,6 @@
 !.env.example
 .idea/dataSources.xml
 *.exe
+frontend/node_modules/
+frontend/dist/
+frontend/.npm-cache/
